@@ -23,10 +23,9 @@ void page_swipe(SBFolderView *self, SBIconScrollView *scrollView)
 {
     CGRect eye = {scrollView.contentOffset, scrollView.frame.size};
 
-    for (int i = 0; i < scrollView.subviews.count; i++) {
-        __unsafe_unretained SBIconListView *view = scrollView.subviews[i];
-        // make sure it is an SBIconListView and actually has icons
-        if (view.subviews.count < 1 || object_getClass(view) != objc_getClass("SBIconListView")) continue;
+    for (__unsafe_unretained SBIconListView *view in self.iconListViews) {
+        // make sure the view actually has icons
+        if (view.subviews.count < 1) continue;
 
         if (view.wasModifiedByCylinder)
         {

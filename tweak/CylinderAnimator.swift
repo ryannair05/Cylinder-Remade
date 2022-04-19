@@ -1,6 +1,45 @@
 import UIKit
 
 private extension UIView {
+
+    func rotate(_ angle: CGFloat, _ pitch: CGFloat = 0, _ yaw: CGFloat = 0, _ roll: CGFloat = 1) {
+        var transform = layer.transform
+
+        if abs(pitch) > 0.01 || abs(yaw) > 0.01 {
+            let perspectiveDistance = (UIScreen.main.bounds.size.width + UIScreen.main.bounds.size.height) / 2
+            transform.m34 = -1/perspectiveDistance
+        }
+
+        layer.transform = CATransform3DRotate(transform, angle, pitch, yaw, roll)
+    }
+
+    func scale(_ percent: CGFloat) {
+        var transform = layer.transform
+        let perspectiveDistance = (UIScreen.main.bounds.size.width + UIScreen.main.bounds.size.height) / 2
+        
+        let oldm34 = transform.m34
+        transform.m34 = -1/perspectiveDistance
+        transform = CATransform3DScale(transform, percent, percent, 1)
+        transform.m34 = oldm34
+
+        layer.transform = transform
+    }
+
+    func translate(_ x: CGFloat, _ y: CGFloat, _ z: CGFloat) {
+        var transform = layer.transform
+
+        let oldm34 = transform.m34
+        if abs(z) > 0.01 {
+            let perspectiveDistance = (UIScreen.main.bounds.size.width + UIScreen.main.bounds.size.height) / 2
+            transform.m34 = -1/perspectiveDistance
+        }
+
+        transform = CATransform3DTranslate(transform, x, y, z)
+        transform.m34 = oldm34
+
+        layer.transform = transform
+    }
+
     var width: CGFloat {
         return frame.size.width / layer.transform.m11
     }
@@ -27,10 +66,10 @@ private extension UIView {
         
         for icon in page.subviews {
             if icon.frame.origin.y + icon.height/2 < page.width/2 {
-                page.layer.transform = translate(page, 0, -percent, 0)
+                page.translate(0, -percent, 0)
             }
             else {
-                page.layer.transform = translate(page, 0, percent, 0)
+                page.translate(0, percent, 0)
             }
         }
     }
@@ -38,7 +77,7 @@ private extension UIView {
     @inlinable @discardableResult @nonobjc static func cube(_ page: UIView, _ offset: CGFloat, isInside: Bool) -> (CGFloat, CGFloat, CGFloat) {
         let percent = offset/page.width
         page.layer.savePosition()
-        page.layer.position.x = page.layer.position.x + offset
+        page.layer.position.x += offset
         
         var angle = -percent*CGFloat.pi/2
         
@@ -57,8 +96,8 @@ private extension UIView {
             angle = -angle
         }
         
-        page.layer.transform = translate(page, x, 0, z)
-        page.layer.transform = rotate(page, angle, 0, 1, 0)
+        page.translate(x, 0, z)
+        page.rotate(angle, 0, 1, 0)
         
         return (x, z, angle)
     }
@@ -83,7 +122,7 @@ private extension UIView {
     static func hinge(_ page: UIView, _ offset: CGFloat) {
         let percent = offset/page.width
         page.layer.savePosition()
-        page.layer.position.x = page.layer.position.x + offset
+        page.layer.position.x += offset
         
         let angle = percent*CGFloat.pi
         var x = page.width/2
@@ -91,17 +130,52 @@ private extension UIView {
             x = -x
         }
         
-        page.layer.transform = translate(page, x, 0, 0)
-        page.layer.transform = rotate(page, angle, 0, 1, 0)
-        page.layer.transform = translate(page, -x, 0, 0)
+        page.translate(x, 0, 0)
+        page.rotate(angle, 0, 1, 0)
+        page.translate(-x, 0, 0)
     }
-    
+
+    static func hyperspace(_ page: SBIconListView, _ offset: CGFloat) {
+        let percent = abs(offset/page.width)
+        let rollup = min(percent * 5, 1)
+        let front: CGFloat = (offset > 0) ? 1 : -1
+        let runaway = max(min((percent-0.2)/0.7, 1), 0)
+        
+        let middleX = page.width/2
+        let middleY = page.height/2 + 7
+
+        page.enumerateIconViews { icon, _ , _ in
+            if let icon = icon {
+                let iconX = icon.frame.origin.x + icon.width/2
+                let iconY = icon.frame.origin.y + icon.height/2
+
+                let angle = atan((middleY-iconY)/(middleX-iconX))
+                let side: CGFloat = (middleX < iconX) ? -1 : 1
+                let pitch = CGFloat.pi/2.4
+
+                if abs(angle) == CGFloat.pi/2 {
+                    let side2: CGFloat = (middleX-iconY > 0) ? -1 : 1
+                    icon.rotate(rollup*pitch*side2, 1, 0)
+                    icon.translate(-500*runaway*side2*front, 0, 0)
+                }
+                else {
+                    icon.rotate(rollup*angle)
+                }
+                icon.rotate(rollup*pitch*side, 0, 1, 0)
+                icon.translate(500*runaway*side*front, 0, 0)
+                icon.alpha = 1 - runaway
+            }
+        }
+
+        page.translate(offset, 0, 0)
+    }
+
     static func leftStairs(_ page: UIView, _ offset: CGFloat) {
         let percent = offset/page.width
         let x = percent * -20
         let z = percent * -100
         
-        page.layer.transform = translate(page, x, 0, z)
+        page.translate(x, 0, z)
     }
     
     static func pageFade(_ page: UIView, _ offset: CGFloat) {
@@ -113,41 +187,53 @@ private extension UIView {
             icon.alpha = percent
         }
     }
+
+    static func physcospiral(_ page: SBIconListView, _ offset: CGFloat) {
+        let percent = abs(offset/page.layer.bounds.size.width)
+        let side: CGFloat = (offset > 0) ? 1 : -1
+
+        let rollup = min(percent*5, 1)
+        let runaway = max(min((percent-0.20)/0.6, 1), 0)
+
+        let middleX = page.width/2
+        let middleY = page.height/2 + 7
+        let radiusParts = middleY / CGFloat(page.subviews.count)
+        let theta = (3.5*CGFloat.pi) / CGFloat(page.subviews.count)
+
+        page.enumerateIconViews { icon, i , _ in
+            if let icon = icon {
+                let initAngle = CGFloat(i) * theta
+                let initRadius = CGFloat(i) * radiusParts
+                let angle = initAngle+runaway*(3.5*CGFloat.pi-initAngle)
+                let radius = initRadius+runaway*(middleY-initRadius) + 45
+                let iconX = icon.frame.origin.x + icon.width/2
+                let iconY = icon.frame.origin.y + icon.height/2
+                let pathX = middleX + (radius*cos(angle)) * side
+                let pathY = middleY + (radius*sin(angle)) * side
+
+                icon.translate(rollup*(pathX-iconX), rollup*(pathY-iconY), 0)
+                icon.rotate(rollup * angle)
+                let size = min(1-(1-(radius/(middleY+50)))*rollup, 1)
+                icon.scale(size*size)
+            }
+        }
+
+        page.translate(offset, 0, 0)
+    }
     
     static func rightStairs(_ page: UIView, _ offset: CGFloat) {
         let percent = offset/page.width
         let x = percent * -20
         let z = percent * 100
         
-        page.layer.transform = translate(page, x, 0, z)
-    }
-    
-    @inlinable @nonobjc static func rotate(_ icon: UIView, _ angle: CGFloat, _ pitch: CGFloat = 0, _ yaw: CGFloat = 0, _ roll: CGFloat = 1) -> CATransform3D {
-        var transform = icon.layer.transform
-        
-        if abs(pitch) > 0.01 || abs(yaw) > 0.01 {
-            transform.m34 = -1/perspectiveDistance
-        }
-        
-        return CATransform3DRotate(transform, angle, pitch, yaw, roll)
-    }
-    
-    @inlinable @nonobjc static func scale(_ icon: UIView, _ percent: CGFloat) -> CATransform3D {
-        var transform = icon.layer.transform
-        
-        let oldm34 = transform.m34
-        transform.m34 = -1/perspectiveDistance
-        transform = CATransform3DScale(transform, percent, percent, 1)
-        transform.m34 = oldm34
-        
-        return transform
+        page.translate(x, 0, z)
     }
     
     static func shrink(_ page: UIView, _ offset: CGFloat) {
         let percent = 1 - abs(offset/page.layer.bounds.size.width)
         
         for icon in page.subviews {
-            icon.layer.transform = scale(icon, percent)
+            icon.scale(percent)
         }
     }
     
@@ -156,7 +242,7 @@ private extension UIView {
         let angle = percent*CGFloat.pi*2
         
         for icon in page.subviews {
-            icon.layer.transform = rotate(icon, angle)
+            icon.rotate(angle)
         }
     }
     
@@ -173,29 +259,15 @@ private extension UIView {
             let pathY = page.height + 7 + icon.height/2
             let iconAngle = atan(iconY/absX)
             
-            icon.layer.transform = translate(icon, (pathX-iconX)*fixed, (pathY-iconY)*fixed, 0)
-            icon.layer.transform = rotate(icon, percent*iconAngle)
-            icon.layer.transform = scale(icon, sqrt(-fixed+1))
+            icon.translate((pathX-iconX)*fixed, (pathY-iconY)*fixed, 0)
+            icon.rotate(percent*iconAngle)
+            icon.scale(sqrt(-fixed+1))
         }
-    }
-    
-    @inlinable @nonobjc static func translate(_ icon: UIView, _ x: CGFloat, _ y: CGFloat, _ z: CGFloat) -> CATransform3D {
-        var transform = icon.layer.transform
-        
-        let oldm34 = transform.m34
-        if abs(z) > 0.01 {
-            transform.m34 = -1/perspectiveDistance
-        }
-        
-        transform = CATransform3DTranslate(transform, x, y, z)
-        transform.m34 = oldm34
-        
-        return transform
     }
 
     static func verticalScrolling(_ page: UIView, _ offset: CGFloat) {
         let percent = offset/page.width
-        page.layer.transform = translate(page, offset, percent*page.height, 0)
+        page.translate(offset, percent*page.height, 0)
         page.alpha = 1 - abs(percent)
     }
     
@@ -226,12 +298,12 @@ private extension UIView {
             let endX = centerX+radius*cos(iconAngle)
             let endY = centerY-radius*sin(iconAngle)
             
-            icon.layer.transform = translate(icon, (endX-begX)*stage1P, (endY-begY)*stage1P, 0)
-            icon.layer.transform = rotate(icon, -stage1P*(CGFloat.pi/2 + iconAngle))
+            icon.translate((endX-begX)*stage1P, (endY-begY)*stage1P, 0)
+            icon.rotate(-stage1P*(CGFloat.pi/2 + iconAngle))
         }
         
         page.alpha = 1 - stage2P
-        page.layer.transform = translate(page, offset, 0, 0)
+        page.translate(offset, 0, 0)
     }
     
     static func wave(_ page: UIView, _ offset: CGFloat) {
@@ -246,10 +318,10 @@ private extension UIView {
             
             if curIconPercent > 0 {
                 let dx = direction*(curIconPercent*pow(3.5, 2))*page.width
-                icon.layer.transform = translate(icon, dx, 0, 0)
+                icon.translate(dx, 0, 0)
             }
         }
         
-        page.layer.transform = translate(page, offset, 0, 0)
+        page.translate(offset, 0, 0)
     }
 }

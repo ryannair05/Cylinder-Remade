@@ -1,7 +1,10 @@
 #import "CALayer+Cylinder.h"
 
-CGFloat getMaxColumns(__unsafe_unretained UIView* view);
+@interface SBIconListView : UIView
+@property(nonatomic, assign, readonly) NSUInteger maximumIconCount;
+@property(nonatomic, assign, readonly) NSUInteger iconColumnsForCurrentOrientation;
+@property(nonatomic, assign, readonly) NSUInteger iconRowsForCurrentOrientation;
 
-CGFloat getMaxRows(__unsafe_unretained UIView* view);
+- (void)enumerateIconViewsUsingBlock:(void (^)(UIView* icon, NSUInteger idx, BOOL *stop))block;
 
-CGFloat getMaxIcons(__unsafe_unretained UIView* view);
+@end

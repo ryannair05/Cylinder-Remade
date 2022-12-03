@@ -69,22 +69,27 @@ void end_scroll(__unsafe_unretained SBFolderView *self)
 -(void)scrollViewDidEndDecelerating:(SBIconScrollView *)scrollView
 {
     %orig;
-
-    if(_enabled) {
+    if (_enabled)
+    {
         end_scroll(self);
         _randSeedForCurrentPage = arc4random();
     }
 }
 
-// For iOS 13, SpringBoard "optimizes" the icon visibility by only showing the bare
-// minimum. I have no idea why this works, but it does. An interesting stack trace can
-// be found by forcing a crash in -[SBRecycledViewsContainer addSubview:]. Probably best to decompile this function in IDA or something.
+// fix issue with icons hiding prematurely (iOS 13-14)
 -(void)updateVisibleColumnRangeWithTotalLists:(NSUInteger)arg1 columnsPerList:(NSUInteger)arg2 iconVisibilityHandling:(NSInteger)arg3
 {
     return %orig(arg1, arg2, 0);
 }
-
 %end
+
+// fix issue with icons hiding prematurely (iOS 15)
+%hook SBRootFolderView
+-(void)updateVisibleColumnRangeWithTotalLists:(unsigned long long)arg1 iconVisibilityHandling:(long long)arg2 {
+	return %orig(arg1, 0);
+}
+%end
+
 
 static void loadPrefs()
 {

@@ -1,12 +1,19 @@
 #import "tweak.h"
 #import "luastuff.h"
 #import "../Defines.h"
-#import "UIView+Cylinder.h"
 
 static BOOL _enabled;
 static u_int32_t _randSeedForCurrentPage;
 
-void reset_icon_layout(__unsafe_unretained SBIconListView *self)
+static BOOL SBIconListView_wasModifiedByCylinder(SBIconView * self, SEL _cmd) { 
+    return [objc_getAssociatedObject(self, @selector(wasModifiedByCylinder)) boolValue];
+}
+     
+static void SBIconListView_setWasModifiedByCylinder(SBIconView * self, SEL _cmd, BOOL wasModifiedByCylinder) { 
+    objc_setAssociatedObject(self, @selector(wasModifiedByCylinder), @(wasModifiedByCylinder), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+static void reset_icon_layout(__unsafe_unretained SBIconListView *self)
 {
     self.layer.transform = CATransform3DIdentity;
     [self.layer restorePosition];
@@ -14,12 +21,10 @@ void reset_icon_layout(__unsafe_unretained SBIconListView *self)
     
     [self enumerateIconViewsUsingBlock:^(SBIconView *v)  {
         v.layer.transform = CATransform3DIdentity;
-        [v.layer restorePosition];
     }];
-
 }
 
-void page_swipe(SBFolderView *self, SBIconScrollView *scrollView)
+static void page_swipe(SBFolderView *self, SBIconScrollView *scrollView)
 {
     CGRect eye = {scrollView.contentOffset, scrollView.frame.size};
 
@@ -42,13 +47,11 @@ void page_swipe(SBFolderView *self, SBIconScrollView *scrollView)
     }
 }
 
-void end_scroll(__unsafe_unretained SBFolderView *self)
+static void end_scroll(__unsafe_unretained SBFolderView *self)
 {
     [self enumerateIconListViewsUsingBlock:^(SBIconListView *view)  {
         reset_icon_layout(view);
         view.wasModifiedByCylinder = false;
-        [view setIconsNeedLayout];
-        [view setAlphaForAllIcons:1];
     }];
 }
 
@@ -63,9 +66,7 @@ void end_scroll(__unsafe_unretained SBFolderView *self)
 
     page_swipe(self, scrollView);
 }
-%end
 
-%hook SBFolderView 
 -(void)scrollViewDidEndDecelerating:(SBIconScrollView *)scrollView
 {
     %orig;
@@ -75,7 +76,19 @@ void end_scroll(__unsafe_unretained SBFolderView *self)
         _randSeedForCurrentPage = arc4random();
     }
 }
+%end
 
+%group iOS15
+%hook SBRootFolderView 
+- (void)updateVisibleColumnRangeWithTotalLists:(NSUInteger)arg1 iconVisibilityHandling:(NSInteger)arg2
+{
+    return %orig(arg1, 0);
+}
+%end
+%end
+
+%group iOS14
+%hook SBFolderView 
 // For iOS 13, SpringBoard "optimizes" the icon visibility by only showing the bare
 // minimum. I have no idea why this works, but it does. An interesting stack trace can
 // be found by forcing a crash in -[SBRecycledViewsContainer addSubview:]. Probably best to decompile this function in IDA or something.
@@ -84,6 +97,7 @@ void end_scroll(__unsafe_unretained SBFolderView *self)
     return %orig(arg1, arg2, 0);
 }
 
+%end
 %end
 
 static void loadPrefs()
@@ -125,7 +139,18 @@ static void loadPrefs()
 %ctor{
     %init;
 
+    if (@available(iOS 15, *)) {
+        %init(iOS15);
+    }
+    else {
+        %init(iOS14);
+    }
+
     //listen to notification center (for settings change)
     CFNotificationCenterRef r = CFNotificationCenterGetDarwinNotifyCenter();
     CFNotificationCenterAddObserver(r, NULL, (CFNotificationCallback)loadPrefs, (CFStringRef)kCylinderSettingsChanged, NULL, CFNotificationSuspensionBehaviorCoalesce);
+
+    Class SBIconListViewClass = objc_getClass("SBIconListView");
+    class_addMethod(SBIconListViewClass, @selector(wasModifiedByCylinder), (IMP)&SBIconListView_wasModifiedByCylinder, "B@:");
+    class_addMethod(SBIconListViewClass, @selector(setWasModifiedByCylinder:), (IMP)&SBIconListView_setWasModifiedByCylinder, "v@:B");
 }

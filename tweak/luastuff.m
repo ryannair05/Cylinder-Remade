@@ -4,7 +4,7 @@
 #import <objc/message.h>
 
 static NSMutableArray<NSString *> *_scriptSelectors = nil;
-BOOL _randomize;
+static BOOL _randomize;
 
 BOOL init_lua(NSArray *scripts, BOOL random)
 {
@@ -18,13 +18,9 @@ BOOL init_lua(NSArray *scripts, BOOL random)
     {
         NSString *script = [scriptDict valueForKey:PrefsEffectDirKey];
 
-        [_scriptSelectors addObject:script];
+        [_scriptSelectors addObject:[script stringByAppendingString:@"::"]];
     }
 
-    if(_scriptSelectors.count == 0)
-    {
-        return false;
-    }
     return true;
 }
 
@@ -32,7 +28,7 @@ BOOL init_lua(NSArray *scripts, BOOL random)
 void manipulate(__unsafe_unretained UIView *view, float offset, u_int32_t rand)
 {
     if (_randomize) {
-        SEL scriptSelector = NSSelectorFromString([_scriptSelectors[rand % _scriptSelectors.count] stringByAppendingString:@"::"]);
+        SEL scriptSelector = NSSelectorFromString(_scriptSelectors[rand % _scriptSelectors.count]);
 
         ((void(*)(Class, SEL, UIView *, CGFloat)) objc_msgSend) (CylinderAnimator.class, scriptSelector, view, offset);
     }
@@ -40,7 +36,7 @@ void manipulate(__unsafe_unretained UIView *view, float offset, u_int32_t rand)
     else {
         for (NSString *scriptString in _scriptSelectors)
         {
-            SEL scriptSelector = NSSelectorFromString([scriptString stringByAppendingString:@"::"]);
+            SEL scriptSelector = NSSelectorFromString(scriptString);
 
             ((void(*)(Class, SEL, UIView *, CGFloat)) objc_msgSend) (CylinderAnimator.class, scriptSelector, view, offset);
         }

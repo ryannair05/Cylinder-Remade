@@ -1,8 +1,6 @@
-#import <UIKit/UIKit.h>
+#import <UIKit/UIView.h>
 
 @interface CALayer(Cylinder)
 -(void)savePosition;
 -(void)restorePosition;
-@property (nonatomic, readonly) CGPoint savedPosition;
-@property (nonatomic, readonly) BOOL hasSavedPosition;
 @end

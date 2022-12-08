@@ -5,6 +5,6 @@
 @property(nonatomic, assign, readonly) NSUInteger iconColumnsForCurrentOrientation;
 @property(nonatomic, assign, readonly) NSUInteger iconRowsForCurrentOrientation;
 
-- (void)enumerateIconViewsUsingBlock:(void (^)(UIView* icon, NSUInteger idx, BOOL *stop))block;
+- (void)enumerateIconViewsUsingBlock:(void (^)(UIView* _Nonnull icon, NSUInteger idx, BOOL *stop))block;
 
 @end

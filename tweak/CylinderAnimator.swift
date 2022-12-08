@@ -2,12 +2,13 @@ import UIKit
 
 private extension UIView {
 
+    static let perspectiveDistance = (UIScreen.main.bounds.size.width + UIScreen.main.bounds.size.height) / 2
+
     func rotate(_ angle: CGFloat, _ pitch: CGFloat = 0, _ yaw: CGFloat = 0, _ roll: CGFloat = 1) {
         var transform = layer.transform
 
-        if abs(pitch) > 0.01 || abs(yaw) > 0.01 {
-            let perspectiveDistance = (UIScreen.main.bounds.size.width + UIScreen.main.bounds.size.height) / 2
-            transform.m34 = -1/perspectiveDistance
+        if !pitch.isZero || !yaw.isZero {
+            transform.m34 = -1/UIView.perspectiveDistance
         }
 
         layer.transform = CATransform3DRotate(transform, angle, pitch, yaw, roll)
@@ -15,10 +16,9 @@ private extension UIView {
 
     func scale(_ percent: CGFloat) {
         var transform = layer.transform
-        let perspectiveDistance = (UIScreen.main.bounds.size.width + UIScreen.main.bounds.size.height) / 2
         
         let oldm34 = transform.m34
-        transform.m34 = -1/perspectiveDistance
+        transform.m34 = -1/UIView.perspectiveDistance
         transform = CATransform3DScale(transform, percent, percent, 1)
         transform.m34 = oldm34
 
@@ -30,8 +30,7 @@ private extension UIView {
 
         let oldm34 = transform.m34
         if abs(z) > 0.01 {
-            let perspectiveDistance = (UIScreen.main.bounds.size.width + UIScreen.main.bounds.size.height) / 2
-            transform.m34 = -1/perspectiveDistance
+            transform.m34 = -1/UIView.perspectiveDistance
         }
 
         transform = CATransform3DTranslate(transform, x, y, z)
@@ -43,7 +42,7 @@ private extension UIView {
     var width: CGFloat {
         return frame.size.width / layer.transform.m11
     }
-    
+     
     var height: CGFloat {
         return frame.size.height / layer.transform.m22
     }
@@ -51,9 +50,38 @@ private extension UIView {
 
 @objc(CylinderAnimator) @objcMembers class CylinderAnimator : NSObject {
     
-    @nonobjc static let screenWidth = UIScreen.main.bounds.size.width
-    @nonobjc static let screenHeight = UIScreen.main.bounds.size.height
-    @nonobjc static let perspectiveDistance = (UIScreen.main.bounds.size.width + UIScreen.main.bounds.size.height) / 2
+    @nonobjc private static let screenWidth = UIScreen.main.bounds.size.width
+    @nonobjc private static let screenHeight = UIScreen.main.bounds.size.height
+
+    static func backwards(_ page: UIView, _ offset: CGFloat) {
+        page.translate(2*offset, 0, 0)
+    }
+
+    static func cardHorizontal(_ page: UIView, _ offset: CGFloat) {
+        page.layer.savePosition()
+        page.layer.position.x += offset
+
+        let percent = offset/page.width
+        
+        if abs(percent) >= 0.5 {
+            page.alpha = 0
+        }
+        
+        page.rotate(-CGFloat.pi*percent, 0, 1, 0)
+    }
+
+    static func cardVertical(_ page: UIView, _ offset: CGFloat) {
+        page.layer.savePosition()
+        page.layer.position.x += offset
+
+        let percent = offset/page.width
+        
+        if abs(percent) >= 0.5 {
+            page.alpha = 0
+        }
+        
+        page.rotate(CGFloat.pi*percent, 1, 0, 0)
+    }
     
     static func chomp(_ page: UIView, _ offset: CGFloat) {
         var percent = offset/page.width
@@ -65,7 +93,7 @@ private extension UIView {
         percent *= screenHeight/2
         
         for icon in page.subviews {
-            if icon.frame.origin.y + icon.height/2 < page.width/2 {
+            if icon.frame.midY < page.width/2 {
                 page.translate(0, -percent, 0)
             }
             else {
@@ -108,7 +136,7 @@ private extension UIView {
     
     static func cubeOutside(_ page: UIView, _ offset: CGFloat) {
         var (x, z, angle) = cube(page, offset, isInside: false)
-        let threshold = abs(atan((perspectiveDistance - z)/x))
+        let threshold = abs(atan((UIView.perspectiveDistance - z)/x))
         angle = abs(angle)
         
         if angle > threshold {
@@ -116,6 +144,21 @@ private extension UIView {
         }
         else {
             page.alpha = 1
+        }
+    }
+
+    static func doubleDoor(_ page: UIView, _ offset: CGFloat) {
+        page.translate(offset, 0, 0)
+        
+        let percent = abs(offset/page.width)
+        
+        for icon in page.subviews {
+            if icon.frame.midX > page.width/2 {
+                icon.translate(percent*page.width, 0, 0)
+            }
+            else {
+                icon.translate(-percent*page.width, 0, 0)
+            }
         }
     }
     
@@ -135,6 +178,24 @@ private extension UIView {
         page.translate(-x, 0, 0)
     }
 
+    static func horizontalAntLines(_ page: UIView, _ offset: CGFloat) {
+         let percent = offset/page.width
+         
+         page.translate(offset, 0, 0)
+         page.alpha = 1 - abs(percent)
+         
+         var direction: CGFloat = 1
+         var lastY: CGFloat = 0
+         
+         for icon in page.subviews {
+             if icon.frame.origin.y > lastY  {
+                 direction = -direction
+                 lastY = icon.frame.origin.y
+             }
+             icon.translate(direction*offset, 0, 0)
+         }
+     }
+
     static func hyperspace(_ page: SBIconListView, _ offset: CGFloat) {
         let percent = abs(offset/page.width)
         let rollup = min(percent * 5, 1)
@@ -145,26 +206,24 @@ private extension UIView {
         let middleY = page.height/2 + 7
 
         page.enumerateIconViews { icon, _ , _ in
-            if let icon = icon {
-                let iconX = icon.frame.origin.x + icon.width/2
-                let iconY = icon.frame.origin.y + icon.height/2
+            let iconX = icon.frame.midX
+            let iconY = icon.frame.midY
 
-                let angle = atan((middleY-iconY)/(middleX-iconX))
-                let side: CGFloat = (middleX < iconX) ? -1 : 1
-                let pitch = CGFloat.pi/2.4
+            let angle = atan((middleY-iconY)/(middleX-iconX))
+            let side: CGFloat = (middleX < iconX) ? -1 : 1
+            let pitch = CGFloat.pi/2.4
 
-                if abs(angle) == CGFloat.pi/2 {
-                    let side2: CGFloat = (middleX-iconY > 0) ? -1 : 1
-                    icon.rotate(rollup*pitch*side2, 1, 0)
-                    icon.translate(-500*runaway*side2*front, 0, 0)
-                }
-                else {
-                    icon.rotate(rollup*angle)
-                }
-                icon.rotate(rollup*pitch*side, 0, 1, 0)
-                icon.translate(500*runaway*side*front, 0, 0)
-                icon.alpha = 1 - runaway
+            if abs(angle) == CGFloat.pi/2 {
+                let side2: CGFloat = (middleX-iconY > 0) ? -1 : 1
+                icon.rotate(rollup*pitch*side2, 1, 0)
+                icon.translate(-500*runaway*side2*front, 0, 0)
             }
+            else {
+                icon.rotate(rollup*angle)
+            }
+            icon.rotate(rollup*pitch*side, 0, 1, 0)
+            icon.translate(500*runaway*side*front, 0, 0)
+            icon.alpha = 1 - runaway
         }
 
         page.translate(offset, 0, 0)
@@ -177,6 +236,28 @@ private extension UIView {
         
         page.translate(x, 0, z)
     }
+
+    static func iconCollection(_ page: SBIconListView, _ offset: CGFloat) {
+        let percent = abs(offset/page.width)
+        let centerX = page.width/2
+        let centerY = page.height/2
+
+        page.enumerateIconViews { icon, _ , _ in
+            let x = icon.frame.midX
+            let y = icon.frame.midY
+            
+            var hypotenuse = percent*hypot(x-centerX, y-centerY)
+            let angle = atan((centerX - x) / (centerY - y))
+            if y > centerY {
+                hypotenuse = -hypotenuse
+            }
+            
+            let dx = hypotenuse * sin(angle)
+            let dy = hypotenuse * cos(angle)
+            
+            icon.translate(dx, dy, 0)
+        }
+    }
     
     static func pageFade(_ page: UIView, _ offset: CGFloat) {
         let percent = 1 - abs(offset/page.layer.bounds.size.width)
@@ -186,6 +267,24 @@ private extension UIView {
         for icon in page.subviews {
             icon.alpha = percent
         }
+    }
+
+    static func pageFlip(_ page: UIView, _ offset: CGFloat) {
+        let percent = offset/page.width
+        
+        let angle = percent*CGFloat.pi
+        
+        page.alpha = 1 - abs(percent)
+        page.rotate(angle, 0, 1, 0)
+    }
+
+    static func pageTwist(_ page: UIView, _ offset: CGFloat) {
+        let percent = offset/page.width
+        
+        let angle = percent*CGFloat.pi
+        
+        page.alpha = 1 - abs(percent)
+        page.rotate(-2/3*angle, 1, 0, 0)
     }
 
     static func physcospiral(_ page: SBIconListView, _ offset: CGFloat) {
@@ -201,21 +300,19 @@ private extension UIView {
         let theta = (3.5*CGFloat.pi) / CGFloat(page.subviews.count)
 
         page.enumerateIconViews { icon, i , _ in
-            if let icon = icon {
-                let initAngle = CGFloat(i) * theta
-                let initRadius = CGFloat(i) * radiusParts
-                let angle = initAngle+runaway*(3.5*CGFloat.pi-initAngle)
-                let radius = initRadius+runaway*(middleY-initRadius) + 45
-                let iconX = icon.frame.origin.x + icon.width/2
-                let iconY = icon.frame.origin.y + icon.height/2
-                let pathX = middleX + (radius*cos(angle)) * side
-                let pathY = middleY + (radius*sin(angle)) * side
+            let initAngle = CGFloat(i) * theta
+            let initRadius = CGFloat(i) * radiusParts
+            let angle = initAngle+runaway*(3.5*CGFloat.pi-initAngle)
+            let radius = initRadius+runaway*(middleY-initRadius) + 45
+            let iconX = icon.frame.midX
+            let iconY = icon.frame.midY
+            let pathX = middleX + (radius*cos(angle)) * side
+            let pathY = middleY + (radius*sin(angle)) * side
 
-                icon.translate(rollup*(pathX-iconX), rollup*(pathY-iconY), 0)
-                icon.rotate(rollup * angle)
-                let size = min(1-(1-(radius/(middleY+50)))*rollup, 1)
-                icon.scale(size*size)
-            }
+            icon.translate(rollup*(pathX-iconX), rollup*(pathY-iconY), 0)
+            icon.rotate(rollup * angle)
+            let size = min(1-(1-(radius/(middleY+50)))*rollup, 1)
+            icon.scale(size*size)
         }
 
         page.translate(offset, 0, 0)
@@ -229,6 +326,19 @@ private extension UIView {
         page.translate(x, 0, z)
     }
     
+    static func scatter(_ page: SBIconListView, _ offset: CGFloat) {
+        let percent = abs(offset/page.width)
+
+        page.enumerateIconViews { icon, i , _ in
+            if i % 2 == 1 {
+                icon.translate(0, percent*page.height/2, 0)
+            }
+            else {
+                icon.translate(0, -percent*page.height/2, 0)
+            }
+        }
+    }
+
     static func shrink(_ page: UIView, _ offset: CGFloat) {
         let percent = 1 - abs(offset/page.layer.bounds.size.width)
         
@@ -252,8 +362,8 @@ private extension UIView {
         let side: CGFloat = (percent > 0) ? 1 : 0
         
         for icon in page.subviews {
-            let iconX = icon.frame.origin.x + icon.width/2
-            let iconY = icon.frame.origin.y + icon.height/2
+            let iconX = icon.frame.midX
+            let iconY = icon.frame.midY
             let absX = iconX+side*(screenWidth-2*iconX)
             let pathX = page.width * side
             let pathY = page.height + 7 + icon.height/2
@@ -262,6 +372,29 @@ private extension UIView {
             icon.translate((pathX-iconX)*fixed, (pathY-iconY)*fixed, 0)
             icon.rotate(percent*iconAngle)
             icon.scale(sqrt(-fixed+1))
+        }
+    }
+
+    static func verticalAntLines(_ page: UIView, _ offset: CGFloat) {
+        let percent = offset/page.width
+        
+        page.translate(offset, 0, 0)
+        page.alpha = 1 - abs(percent)
+        
+        var direction: CGFloat = 1
+        var lastX = page.width
+        
+        for icon in page.subviews {
+            if lastX > icon.frame.origin.x {
+                direction = -1
+            }
+            else {
+                direction = -direction
+            }
+            
+            lastX = icon.frame.origin.x
+            
+            icon.translate(0, direction*percent*page.height, 0)
         }
     }
 
@@ -292,8 +425,8 @@ private extension UIView {
         for (i, icon) in page.subviews.enumerated() {
             let iconAngle = theta*CGFloat(i) - pi_6 + stage3P
             
-            let begX = icon.frame.origin.x + icon.width/2
-            let begY = icon.frame.origin.y + icon.height/2
+            let begX = icon.frame.midX
+            let begY = icon.frame.midY
             
             let endX = centerX+radius*cos(iconAngle)
             let endY = centerY-radius*sin(iconAngle)
@@ -323,5 +456,27 @@ private extension UIView {
         }
         
         page.translate(offset, 0, 0)
+    }
+
+    static func wheel(_ page: UIView, _ offset: CGFloat) {
+        page.layer.savePosition()
+        page.layer.position.x += offset
+
+        let percent = offset/page.width
+
+        for icon in page.subviews {
+            let iconCenterX = icon.frame.midX
+            let iconCenterY = icon.frame.midY
+            let iconCenterXOffset = page.width/2 - iconCenterX
+            let iconRadius = screenHeight - iconCenterY
+
+            let percent2 = ((offset < 0) ?  iconCenterX : page.width - iconCenterX) / page.width
+
+            let angle = -percent*(1 + percent2*2) * CGFloat.pi/2
+
+            icon.translate(iconCenterXOffset, iconRadius, 0)
+            icon.rotate(angle)
+            icon.translate(-iconCenterXOffset, -iconRadius, 0)
+        }
     }
 }

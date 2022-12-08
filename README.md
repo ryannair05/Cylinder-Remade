@@ -2,9 +2,9 @@
 
 ![](https://github.com/rweichler/cylinder/blob/cb8f000dfb1045b9b7cb872ba9b8c843f7f73ebc/code.png)
 
-## Latest version: 0.0.1 beta
+## Latest version: 0.0.3 beta
 
-[Here](https://github.com/ryannair05/Cylinder-Remade/blob/master/packages/com.ryannair05.cylinderremade_0.0.1-beta_iphoneos-arm.deb?raw=true)'s the deb.
+[Here](https://github.com/ryannair05/Cylinder-Remade/blob/master/packages/com.ryannair05.cylinderremade_0.0.3-beta_iphoneos-arm.deb?raw=true)'s the deb.
 
 ## what???
 

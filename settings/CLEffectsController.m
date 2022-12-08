@@ -60,15 +60,24 @@ static CLEffectsController *sharedController = nil;
 
 - (void)addEffectsFromDirectory:(NSString *)directory
 {
-    
+    [self.effects addObject:[[CLEffect alloc] initWithName:@"Ant Lines (Horizontal)" selectorName:@"horizontalAntLines" developer:@"Ryan Nair"]];
+    [self.effects addObject:[[CLEffect alloc] initWithName:@"Ant Lines (Vertical)" selectorName:@"verticalAntLines" developer:@"Ryan Nair"]];
+    [self.effects addObject:[[CLEffect alloc] initWithName:@"Backwards" selectorName:@"backwards" developer:@"Ryan Nair"]];
+    [self.effects addObject:[[CLEffect alloc] initWithName:@"Card (Horizontal)" selectorName:@"cardHorizontal" developer:@"Ryan Nair"]];
+    [self.effects addObject:[[CLEffect alloc] initWithName:@"Card (Vertical)" selectorName:@"cardVertical" developer:@"Ryan Nair"]];
+    [self.effects addObject:[[CLEffect alloc] initWithName:@"Checkerboard Scatter" selectorName:@"scatter" developer:@"Ryan Nair"]];
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Chomp" selectorName:@"chomp" developer:@"Ryan Nair"]];
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Cube Inside" selectorName:@"cubeInside" developer:@"Ryan Nair"]];
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Cube Outside" selectorName:@"cubeOutside" developer:@"Ryan Nair"]];
+    [self.effects addObject:[[CLEffect alloc] initWithName:@"Double Door" selectorName:@"doubleDoor" developer:@"Ryan Nair"]];
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Hinge" selectorName:@"hinge" developer:@"Ryan Nair"]];
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Hyperspace" selectorName:@"hyperspace" developer:@"Ryan Nair"]];
+    [self.effects addObject:[[CLEffect alloc] initWithName:@"Icon Collection" selectorName:@"iconCollection" developer:@"Ryan Nair"]];
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Left Stairs" selectorName:@"leftStairs" developer:@"Ryan Nair"]];
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Right Stairs" selectorName:@"rightStairs" developer:@"Ryan Nair"]];
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Page Fade" selectorName:@"pageFade" developer:@"Ryan Nair"]];
+    [self.effects addObject:[[CLEffect alloc] initWithName:@"Page Flip" selectorName:@"pageFlip" developer:@"Ryan Nair"]];
+    [self.effects addObject:[[CLEffect alloc] initWithName:@"Page Twist" selectorName:@"pageTwist" developer:@"Ryan Nair"]];
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Physcospiral" selectorName:@"physcospiral" developer:@"Ryan Nair"]];
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Shrink" selectorName:@"shrink" developer:@"Ryan Nair"]];
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Spin" selectorName:@"spin" developer:@"Ryan Nair"]];
@@ -76,6 +85,7 @@ static CLEffectsController *sharedController = nil;
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Vertical Scrolling" selectorName:@"verticalScrolling" developer:@"Ryan Nair"]];
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Vortex" selectorName:@"vortex" developer:@"Ryan Nair"]];
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Wave" selectorName:@"wave" developer:@"Ryan Nair"]];
+    [self.effects addObject:[[CLEffect alloc] initWithName:@"Wheel" selectorName:@"wheel" developer:@"Ryan Nair"]];
     
     // if(effect)
         // [self.effects addObject:effect];

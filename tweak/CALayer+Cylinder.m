@@ -24,18 +24,5 @@
     self.position = value.CGPointValue;
     self.savedValue = nil;
 }
--(CGPoint) savedPosition
-{
-    NSValue *value = self.savedValue;
-    if(value)
-        return value.CGPointValue;
-    else
-        return self.position;
-}
-
--(BOOL)hasSavedPosition
-{
-    return self.savedValue != nil;
-}
 
 @end

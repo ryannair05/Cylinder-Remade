@@ -1,10 +1,6 @@
+//
+//  Use this file to import your target's public headers that you would like to expose to Swift.
+//
+
+#import "CylinderAnimator.h"
 #import "CALayer+Cylinder.h"
-
-@interface SBIconListView : UIView
-@property(nonatomic, assign, readonly) NSUInteger maximumIconCount;
-@property(nonatomic, assign, readonly) NSUInteger iconColumnsForCurrentOrientation;
-@property(nonatomic, assign, readonly) NSUInteger iconRowsForCurrentOrientation;
-
-- (void)enumerateIconViewsUsingBlock:(void (^)(UIView* _Nonnull icon, NSUInteger idx, BOOL *stop))block;
-
-@end

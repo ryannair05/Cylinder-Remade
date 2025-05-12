@@ -2,9 +2,11 @@
 
 ![](https://github.com/rweichler/cylinder/blob/cb8f000dfb1045b9b7cb872ba9b8c843f7f73ebc/code.png)
 
-## Latest version: 0.0.3 beta
+## Latest version: 0.0.4 beta
 
-[Here](https://github.com/ryannair05/Cylinder-Remade/blob/master/packages/com.ryannair05.cylinderremade_0.0.3-beta_iphoneos-arm.deb?raw=true)'s the deb.
+[Rootful deb](https://github.com/ryannair05/Cylinder-Remade/blob/master/packages/com.ryannair05.cylinderremade_0.0.4-beta_iphoneos-arm.deb?raw=true)
+
+[Rootless deb](https://github.com/ryannair05/Cylinder-Remade/blob/master/packages/com.ryannair05.cylinderremade_0.0.4-beta_iphoneos-arm64.deb?raw=true).
 
 ## what???
 
@@ -35,7 +37,7 @@ Clone the repository and cd into it
 
 ```
 git clone https://github.com/ryannair05/Cylinder-Remade.git
-cd cylinder
+cd cylinder-remade
 ```
 
 ### For those who don't have Xcode installed

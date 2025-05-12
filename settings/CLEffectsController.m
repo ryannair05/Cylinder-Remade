@@ -70,6 +70,7 @@ static CLEffectsController *sharedController = nil;
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Cube Inside" selectorName:@"cubeInside" developer:@"Ryan Nair"]];
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Cube Outside" selectorName:@"cubeOutside" developer:@"Ryan Nair"]];
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Double Door" selectorName:@"doubleDoor" developer:@"Ryan Nair"]];
+    [self.effects addObject:[[CLEffect alloc] initWithName:@"Helix" selectorName:@"doubleHelix" developer:@"Ryan Nair"]];
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Hinge" selectorName:@"hinge" developer:@"Ryan Nair"]];
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Hyperspace" selectorName:@"hyperspace" developer:@"Ryan Nair"]];
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Icon Collection" selectorName:@"iconCollection" developer:@"Ryan Nair"]];
@@ -78,7 +79,7 @@ static CLEffectsController *sharedController = nil;
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Page Fade" selectorName:@"pageFade" developer:@"Ryan Nair"]];
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Page Flip" selectorName:@"pageFlip" developer:@"Ryan Nair"]];
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Page Twist" selectorName:@"pageTwist" developer:@"Ryan Nair"]];
-    [self.effects addObject:[[CLEffect alloc] initWithName:@"Physcospiral" selectorName:@"physcospiral" developer:@"Ryan Nair"]];
+    [self.effects addObject:[[CLEffect alloc] initWithName:@"Psychospiral" selectorName:@"psychospiral" developer:@"Ryan Nair"]];
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Shrink" selectorName:@"shrink" developer:@"Ryan Nair"]];
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Spin" selectorName:@"spin" developer:@"Ryan Nair"]];
     [self.effects addObject:[[CLEffect alloc] initWithName:@"Suck" selectorName:@"suck" developer:@"Ryan Nair"]];
@@ -114,7 +115,7 @@ static CLEffectsController *sharedController = nil;
 {
     self.effects = [NSMutableArray array];
     CylinderSettingsListController *ctrl = (CylinderSettingsListController*)self.parentController;
-    [self addEffectsFromDirectory:kEffectsDirectory];
+    [self addEffectsFromDirectory:nil];
 
     NSArray *effects = [ctrl.settings objectForKey:PrefsEffectKey];
     self.selectedEffects = [NSMutableArray array];

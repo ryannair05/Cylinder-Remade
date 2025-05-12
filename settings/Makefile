@@ -1,6 +1,6 @@
 include $(THEOS)/makefiles/common.mk
 
-export TARGET := iphone:clang:14.5:14.0
+export TARGET := iphone:clang:16.5:14.0
 
 BUNDLE_NAME = CylinderSettings
 CylinderSettings_FILES = CLAlignedTableViewCell.m CLDonateController.m CLEffect.m CLEffectsController.m CLFormulasController.m CLTwitterCell.m CylinderSettings.m

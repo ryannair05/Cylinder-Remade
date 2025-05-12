@@ -1,40 +1,6 @@
 
 #import "CALayer+Cylinder.h"
-#import "luastuff.h"
-
-@interface SBIcon : NSObject
-@property (nonatomic,copy,readonly) NSString * displayName; 
-@end 
-
-
-@interface SBIconImageView : UIView
-@end 
-
-@interface SBIconImageCrossfadeView : UIView
-@end 
-
-@interface SBIconView : UIView {
-    SBIconImageView* _iconImageView;
-    SBIconImageCrossfadeView* _crossfadeView;
-}
-
-@property (nonatomic,retain) SBIcon *icon;
-@end 
-
-NS_CLASS_AVAILABLE_IOS(4_0) @interface SBIconListView : UIView
-@property(readonly, nonatomic) NSUInteger maximumIconCount;
-@property(readonly, nonatomic) NSUInteger maxIcons API_DEPRECATED_WITH_REPLACEMENT("maximumIconCount", ios(4.0, 13.0));
-@property(readonly, nonatomic) NSUInteger iconColumnsForCurrentOrientation;
-@property(readonly, nonatomic) NSUInteger iconRowsForCurrentOrientation;
-@property (assign, nonatomic) BOOL wasModifiedByCylinder;
-
--(NSArray *)icons;
--(void)layoutIconsNow;
-- (void)setIconsNeedLayout;
-- (void)setAlphaForAllIcons:(CGFloat)alpha;
-- (void)enumerateIconViewsUsingBlock:(void(^)())block;
-
-@end
+#import "CylinderAnimator.h"
 
 @interface SBIconScrollView : UIScrollView
 @end 

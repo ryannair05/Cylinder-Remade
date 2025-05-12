@@ -9,7 +9,7 @@ export ADDITIONAL_CFLAGS = -DTHEOS_LEAN_AND_MEAN -fobjc-arc
 include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = Cylinder
-Cylinder_FILES = tweak/tweak.x $(wildcard tweak/*.m) tweak/CylinderAnimator.swift
+Cylinder_FILES = $(wildcard tweak/*.swift) tweak/tweak.x tweak/CALayer+Cylinder.m
 Cylinder_SWIFT_BRIDGING_HEADER = tweak/Cylinder-Bridging-Header.h
 
 include $(THEOS_MAKE_PATH)/tweak.mk
